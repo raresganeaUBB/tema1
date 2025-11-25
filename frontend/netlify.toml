@@ -1,9 +1,11 @@
 [build]
-  command = "npm run build"
+  command = "yarn build"
   publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  # Disable blobs for local CLI deployments if not needed
+  # Blobs will work automatically when deployed through Netlify dashboard
 
 [build.environment]
   NODE_VERSION = "18"
