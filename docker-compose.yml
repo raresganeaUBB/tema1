@@ -1,0 +1,144 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: event-ticketing-postgres
+    environment:
+      POSTGRES_DB: eventticketing
+      POSTGRES_USER: eventuser
+      POSTGRES_PASSWORD: eventpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/sample-data.sql:/docker-entrypoint-initdb.d/02-sample-data.sql
+    networks:
+      - event-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventuser -d eventticketing"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Tomcat Server - Event Management Servlet
+  tomcat:
+    image: tomcat:10.1-jdk17
+    container_name: event-ticketing-tomcat
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/event-servlet/target/event-servlet.war:/usr/local/tomcat/webapps/event-servlet.war:ro
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/eventticketing
+      - DATABASE_USER=eventuser
+      - DATABASE_PASSWORD=eventpass
+      - SERVLET_PORT=8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - event-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/event-servlet/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Jetty Server - Booking Servlet
+  jetty:
+    image: jetty:12.0-jdk17
+    container_name: event-ticketing-jetty
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./backend/booking-servlet/target/booking-servlet:/var/lib/jetty/webapps/booking-servlet:ro
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/eventticketing
+      - DATABASE_USER=eventuser
+      - DATABASE_PASSWORD=eventpass
+      - SERVLET_PORT=8081
+      - EVENT_SERVICE_URL=http://tomcat:8080/event-servlet/api/events
+      - EVENT_SERVLET_URL=http://tomcat:8080/event-servlet
+      - JETTY_START=/usr/local/jetty/start.ini
+    command: ["--add-module=deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tomcat:
+        condition: service_healthy
+    networks:
+      - event-network
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8080/booking-servlet/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # WildFly Server - Both Servlets (Alternative deployment)
+  wildfly:
+    image: quay.io/wildfly/wildfly:30.0.1.Final-jdk17
+    container_name: event-ticketing-wildfly
+    ports:
+      - "8082:8080"
+      - "9990:9990" # Management console
+    volumes:
+      - ./backend/event-servlet/target/event-servlet.war:/opt/jboss/wildfly/standalone/deployments/event-servlet.war:ro
+      - ./backend/booking-servlet/target/booking-servlet.war:/opt/jboss/wildfly/standalone/deployments/booking-servlet.war:ro
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/eventticketing
+      - DATABASE_USER=eventuser
+      - DATABASE_PASSWORD=eventpass
+      - SERVLET_PORT=8082
+      - EVENT_SERVICE_URL=http://tomcat:8080/event-servlet/api/events
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - event-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/event-servlet/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: event-ticketing-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_BOOKING_API_URL=http://localhost:8081
+    depends_on:
+      tomcat:
+        condition: service_healthy
+    networks:
+      - event-network
+
+  # Nginx Load Balancer (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: event-ticketing-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - tomcat
+      - jetty
+      - wildfly
+      - frontend
+    networks:
+      - event-network
+
+volumes:
+  postgres_data:
+
+networks:
+  event-network:
+    driver: bridge

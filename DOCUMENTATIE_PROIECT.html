@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentație Proiect - Sistem de Ticketing Evenimente</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            max-width: 210mm;
+            margin: 20mm auto;
+            padding: 20mm;
+            background: white;
+        }
+        h1 {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10mm;
+        }
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 8mm;
+            margin-bottom: 4mm;
+            border-bottom: 1px solid #000;
+        }
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 6mm;
+            margin-bottom: 3mm;
+        }
+        .header-info {
+            text-align: center;
+            margin-bottom: 15mm;
+        }
+        .header-info p {
+            margin: 2mm 0;
+        }
+        .code {
+            font-family: 'Courier New', monospace;
+            font-size: 11pt;
+            background-color: #f5f5f5;
+            padding: 2mm;
+            margin: 2mm 0;
+            border-left: 3px solid #333;
+        }
+        .method-signature {
+            font-family: 'Courier New', monospace;
+            font-size: 11pt;
+            background-color: #f9f9f9;
+            padding: 2mm;
+            margin: 2mm 0;
+            border-left: 2px solid #666;
+        }
+        ul, ol {
+            margin: 2mm 0;
+            padding-left: 8mm;
+        }
+        li {
+            margin: 1mm 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 4mm 0;
+            font-size: 11pt;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 2mm;
+            text-align: left;
+        }
+        th {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-info">
+    <h1>Sistem de Management și Ticketing pentru Evenimente</h1>
+    <p><strong>Nume student:</strong> Ganea Rareș</p>
+    <p><strong>Grupă:</strong> 224</p>
+    <p><strong>Titlu lucrare:</strong> Aplicație Web pentru Managementul Evenimentelor și Rezervărilor de Bilete</p>
+</div>
+
+<h2>1. Introducere</h2>
+
+<p>Acest document prezintă documentația tehnică pentru o aplicație web de management și ticketing pentru evenimente. Aplicația este construită folosind tehnologii Java Enterprise, servleturi, și o arhitectură de tip microservicii, cu două servleturi separate care comunică între ele prin HTTP REST API.</p>
+
+<p>Aplicația permite utilizatorilor să vizualizeze evenimente, să creeze conturi, să rezerve bilete și să finalizeze plăți. Sistemul este implementat folosind PostgreSQL ca bază de date, servleturi Java pentru backend și Next.js pentru interfața utilizatorului.</p>
+
+<h2>2. Aspecte Teoretice și Arhitectură</h2>
+
+<h3>2.1 Arhitectura Aplicației</h3>
+
+<p>Aplicația urmează o arhitectură în trei straturi:</p>
+
+<ul>
+    <li><strong>Stratul de prezentare:</strong> Frontend Next.js/React care oferă interfața grafică pentru utilizatori</li>
+    <li><strong>Stratul de logică de business:</strong> Două servleturi Java (Event Servlet și Booking Servlet) care gestionează operațiile de business</li>
+    <li><strong>Stratul de date:</strong> Baza de date PostgreSQL care stochează toate datele aplicației</li>
+</ul>
+
+<h3>2.2 Comunicarea între Servleturi</h3>
+
+<p>Aplicația folosește două servleturi separate care comunică între ele prin HTTP REST API, similar cu o arhitectură de microservicii:</p>
+
+<ul>
+    <li><strong>Event Servlet</strong> (port 8080, Tomcat): Gestionează evenimentele, utilizatorii și autentificarea</li>
+    <li><strong>Booking Servlet</strong> (port 8081, Jetty): Gestionează rezervările, plățile și comunică cu Event Servlet pentru validare</li>
+</ul>
+
+<p>Comunicarea se realizează prin Java HttpClient, unde Booking Servlet face requesturi HTTP către Event Servlet pentru validarea evenimentelor și actualizarea capacității.</p>
+
+<h3>2.3 Tehnologii Utilizate</h3>
+
+<ul>
+    <li><strong>Java 17:</strong> Limbajul de programare principal</li>
+    <li><strong>Jakarta EE (JAX-RS):</strong> Pentru crearea API-urilor REST</li>
+    <li><strong>PostgreSQL:</strong> Sistem de management al bazei de date relaționale</li>
+    <li><strong>JDBC:</strong> Pentru conectarea și interacțiunea cu baza de date</li>
+    <li><strong>HikariCP:</strong> Connection pooling pentru optimizarea conexiunilor la baza de date</li>
+    <li><strong>Jackson:</strong> Pentru serializarea și deserializarea JSON</li>
+    <li><strong>BCrypt:</strong> Pentru hash-uirea securizată a parolelor</li>
+    <li><strong>Apache Tomcat 10:</strong> Server pentru Event Servlet</li>
+    <li><strong>Eclipse Jetty 12:</strong> Server pentru Booking Servlet</li>
+    <li><strong>Next.js/React:</strong> Framework pentru frontend</li>
+</ul>
+
+<h2>3. Structura Bazei de Date</h2>
+
+<p>Baza de date PostgreSQL conține următoarele tabele principale, cu legături între ele:</p>
+
+<table>
+    <tr>
+        <th>Tabel</th>
+        <th>Descriere</th>
+        <th>Legături</th>
+    </tr>
+    <tr>
+        <td>users</td>
+        <td>Stochează informațiile utilizatorilor</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>events</td>
+        <td>Stochează informațiile despre evenimente</td>
+        <td>-</td>
+    </tr>
+    <tr>
+        <td>bookings</td>
+        <td>Stochează rezervările utilizatorilor</td>
+        <td>FK către users, FK către events</td>
+    </tr>
+    <tr>
+        <td>booking_items</td>
+        <td>Stochează articolele din fiecare rezervare</td>
+        <td>FK către bookings, FK către ticket_types, FK către seats</td>
+    </tr>
+    <tr>
+        <td>payments</td>
+        <td>Stochează informațiile despre plăți</td>
+        <td>FK către bookings</td>
+    </tr>
+    <tr>
+        <td>ticket_types</td>
+        <td>Stochează tipurile de bilete disponibile</td>
+        <td>FK către events</td>
+    </tr>
+    <tr>
+        <td>seats</td>
+        <td>Stochează locurile disponibile pentru evenimente</td>
+        <td>FK către events</td>
+    </tr>
+</table>
+
+<p>Toate tabelele folosesc chei primare auto-incrementale (BIGSERIAL) și foreign keys pentru a menține integritatea referențială. Tabelele au și coloane pentru tracking temporal (created_at, updated_at) care sunt actualizate automat prin trigger-e PostgreSQL.</p>
+
+<h2>4. Obiecte și Componente Principale</h2>
+
+<h3>4.1 Clase Model (Shared Module)</h3>
+
+<p>Module-ul shared conține clasele model care reprezintă entitățile din baza de date:</p>
+
+<h4>4.1.1 Clasa User</h4>
+<p><strong>Pachet:</strong> com.eventticketing.shared.model</p>
+<p><strong>Descriere:</strong> Reprezintă un utilizator al sistemului.</p>
+
+<div class="method-signature">
+<strong>Constructori:</strong><br>
+User()<br>
+User(String username, String email, String passwordHash, String firstName, String lastName)
+</div>
+
+<div class="method-signature">
+<strong>Metode principale:</strong><br>
+Long getId()<br>
+void setId(Long id)<br>
+String getUsername()<br>
+void setUsername(String username)<br>
+String getEmail()<br>
+void setEmail(String email)<br>
+String getPasswordHash()<br>
+void setPasswordHash(String passwordHash)<br>
+String getFirstName()<br>
+void setFirstName(String firstName)<br>
+String getLastName()<br>
+void setLastName(String lastName)<br>
+String getPhone()<br>
+void setPhone(String phone)<br>
+LocalDateTime getCreatedAt()<br>
+void setCreatedAt(LocalDateTime createdAt)<br>
+LocalDateTime getUpdatedAt()<br>
+void setUpdatedAt(LocalDateTime updatedAt)<br>
+Boolean getIsActive()<br>
+void setIsActive(Boolean isActive)
+</div>
+
+<h4>4.1.2 Clasa Event</h4>
+<p><strong>Pachet:</strong> com.eventticketing.shared.model</p>
+<p><strong>Descriere:</strong> Reprezintă un eveniment în sistem.</p>
+
+<div class="method-signature">
+<strong>Constructori:</strong><br>
+Event()<br>
+Event(String title, String description, LocalDateTime eventDate, Long venueId, Long organizerId)
+</div>
+
+<div class="method-signature">
+<strong>Metode principale:</strong><br>
+Long getId()<br>
+void setId(Long id)<br>
+String getTitle()<br>
+void setTitle(String title)<br>
+String getDescription()<br>
+void setDescription(String description)<br>
+LocalDateTime getEventDate()<br>
+void setEventDate(LocalDateTime eventDate)<br>
+String getStatus()<br>
+void setStatus(String status)<br>
+Integer getMaxAttendees()<br>
+void setMaxAttendees(Integer maxAttendees)<br>
+BigDecimal getBasePrice()<br>
+void setBasePrice(BigDecimal basePrice)
+</div>
+
+<h3>4.2 Clase de Serviciu</h3>
+
+<h4>4.2.1 Clasa DatabaseConnection</h4>
+<p><strong>Pachet:</strong> com.eventticketing.shared.database</p>
+<p><strong>Descriere:</strong> Gestionează conexiunea la baza de date folosind HikariCP connection pool.</p>
+
+<div class="method-signature">
+<strong>Metode statice:</strong><br>
+Connection getConnection() throws SQLException<br>
+DataSource getDataSource()<br>
+void closeDataSource()<br>
+boolean isHealthy()<br>
+void logConnectionStats()
+</div>
+
+<p><strong>Context de utilizare:</strong> Clasa este folosită de toate serviciile care necesită acces la baza de date. Inițializează automat un connection pool la pornirea aplicației.</p>
+
+<h4>4.2.2 Clasa EventService</h4>
+<p><strong>Pachet:</strong> com.eventticketing.event.service</p>
+<p><strong>Descriere:</strong> Implementează logica de business pentru gestionarea evenimentelor.</p>
+
+<div class="method-signature">
+<strong>Metode:</strong><br>
+List&lt;Event&gt; getAllEvents(String category, String status, int page, int size) throws SQLException<br>
+Event getEventById(Long id) throws SQLException<br>
+Event createEvent(Event event) throws SQLException<br>
+Event updateEvent(Event event) throws SQLException<br>
+boolean deleteEvent(Long id) throws SQLException<br>
+boolean updateEventCapacity(Long eventId, int bookedSeats) throws SQLException<br>
+List&lt;TicketType&gt; getTicketTypesByEventId(Long eventId) throws SQLException
+</div>
+
+<p><strong>Excepții:</strong> SQLException - aruncată în caz de erori la accesarea bazei de date</p>
+<p><strong>Context de utilizare:</strong> Folosită de EventResource pentru a procesa requesturile HTTP legate de evenimente.</p>
+
+<h4>4.2.3 Clasa UserService</h4>
+<p><strong>Pachet:</strong> com.eventticketing.shared.service</p>
+<p><strong>Descriere:</strong> Implementează logica de business pentru gestionarea utilizatorilor și autentificare.</p>
+
+<div class="method-signature">
+<strong>Metode:</strong><br>
+User registerUser(String username, String email, String password, String firstName, String lastName, String phone) throws SQLException<br>
+User authenticateUser(String email, String password) throws SQLException<br>
+boolean userExists(String username, String email) throws SQLException<br>
+User getUserById(Long id) throws SQLException
+</div>
+
+<p><strong>Excepții:</strong> 
+<ul>
+    <li>SQLException - aruncată în caz de erori la accesarea bazei de date</li>
+    <li>IllegalArgumentException - aruncată când username sau email există deja la înregistrare</li>
+</ul>
+</p>
+
+<p><strong>Context de utilizare:</strong> Folosită de AuthResource pentru procesarea înregistrărilor și autentificărilor utilizatorilor.</p>
+
+<h3>4.3 Resurse REST (Servleturi)</h3>
+
+<h4>4.3.1 Clasa EventResource</h4>
+<p><strong>Pachet:</strong> com.eventticketing.event.servlet</p>
+<p><strong>Descriere:</strong> Resource JAX-RS care expune endpoint-uri REST pentru gestionarea evenimentelor.</p>
+<p><strong>Anotații:</strong> @Path("/events"), @Produces(MediaType.APPLICATION_JSON), @Consumes(MediaType.APPLICATION_JSON)</p>
+
+<div class="method-signature">
+<strong>Metode HTTP:</strong><br>
+Response getAllEvents(@QueryParam("category") String category, @QueryParam("status") String status, @QueryParam("page") int page, @QueryParam("size") int size)<br>
+Response getEventById(@PathParam("id") Long id)<br>
+Response createEvent(Event event)<br>
+Response updateEvent(@PathParam("id") Long id, Event event)<br>
+Response deleteEvent(@PathParam("id") Long id)<br>
+Response updateEventCapacity(@PathParam("id") Long eventId, Map&lt;String, Object&gt; requestData)
+</div>
+
+<p><strong>Context de utilizare:</strong> Deployată în Event Servlet (Tomcat, port 8080). Endpoint-urile sunt accesibile la /event-servlet/api/events.</p>
+
+<h4>4.3.2 Clasa BookingResource</h4>
+<p><strong>Pachet:</strong> com.eventticketing.booking.servlet</p>
+<p><strong>Descriere:</strong> Resource JAX-RS care expune endpoint-uri REST pentru gestionarea rezervărilor și plăților.</p>
+<p><strong>Anotații:</strong> @Path("/bookings"), @Produces(MediaType.APPLICATION_JSON), @Consumes(MediaType.APPLICATION_JSON)</p>
+
+<div class="method-signature">
+<strong>Metode HTTP:</strong><br>
+Response getAllBookings()<br>
+Response getBookingById(@PathParam("id") Long id)<br>
+Response createBooking(BookingRequest request)<br>
+Response processPayment(@PathParam("id") Long bookingId, PaymentRequest request)
+</div>
+
+<p><strong>Context de utilizare:</strong> Deployată în Booking Servlet (Jetty, port 8081). Endpoint-urile sunt accesibile la /booking-servlet/api/bookings.</p>
+
+<h4>4.3.3 Clasa AuthResource</h4>
+<p><strong>Pachet:</strong> com.eventticketing.event.servlet</p>
+<p><strong>Descriere:</strong> Resource JAX-RS pentru autentificare și înregistrare utilizatori.</p>
+<p><strong>Anotații:</strong> @Path("/auth"), @Produces(MediaType.APPLICATION_JSON), @Consumes(MediaType.APPLICATION_JSON)</p>
+
+<div class="method-signature">
+<strong>Metode HTTP:</strong><br>
+Response register(RegisterRequest request)<br>
+Response login(LoginRequest request)
+</div>
+
+<p><strong>Context de utilizare:</strong> Deployată în Event Servlet. Endpoint-urile sunt accesibile la /event-servlet/api/auth/register și /event-servlet/api/auth/login.</p>
+
+<h3>4.4 Clase pentru Comunicare între Servleturi</h3>
+
+<h4>4.4.1 Clasa EventService (Booking Servlet)</h4>
+<p><strong>Pachet:</strong> com.eventticketing.booking.servlet</p>
+<p><strong>Descriere:</strong> Clasă de serviciu care gestionează comunicarea HTTP cu Event Servlet pentru validarea și actualizarea evenimentelor.</p>
+
+<div class="method-signature">
+<strong>Constructori:</strong><br>
+EventService()
+</div>
+
+<div class="method-signature">
+<strong>Metode:</strong><br>
+EventValidationResult validateEvent(Long eventId)<br>
+boolean updateEventCapacity(Long eventId, int bookedSeats)<br>
+Map&lt;String, Object&gt; getEventDetails(Long eventId)
+</div>
+
+<p><strong>Excepții:</strong> IOException, InterruptedException - aruncate în caz de erori la comunicarea HTTP</p>
+<p><strong>Context de utilizare:</strong> Folosită de BookingResource pentru a valida evenimentele înainte de crearea unei rezervări și pentru a actualiza capacitatea după rezervare.</p>
+
+<div class="method-signature">
+<strong>Clasă internă EventValidationResult:</strong><br>
+boolean isValid()<br>
+void setValid(boolean valid)<br>
+Long getEventId()<br>
+void setEventId(Long eventId)<br>
+String getEventName()<br>
+void setEventName(String eventName)<br>
+double getTicketPrice()<br>
+void setTicketPrice(double ticketPrice)<br>
+int getCapacity()<br>
+void setCapacity(int capacity)<br>
+String getStatus()<br>
+void setStatus(String status)<br>
+String getErrorMessage()<br>
+void setErrorMessage(String errorMessage)
+</div>
+
+<h3>4.5 Filtre și Componente de Securitate</h3>
+
+<h4>4.5.1 Clasa CORSFilter</h4>
+<p><strong>Pachet:</strong> com.eventticketing.event.servlet / com.eventticketing.booking.servlet</p>
+<p><strong>Descriere:</strong> Filter pentru gestionarea CORS (Cross-Origin Resource Sharing) care permite requesturi din frontend.</p>
+
+<div class="method-signature">
+<strong>Metode:</strong><br>
+void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException<br>
+void init(FilterConfig filterConfig) throws ServletException<br>
+void destroy()
+</div>
+
+<p><strong>Context de utilizare:</strong> Configurat în web.xml pentru ambele servleturi, permite comunicarea între frontend (Next.js) și backend (servleturi).</p>
+
+<h2>5. Fluxuri de Prelucrare</h2>
+
+<h3>5.1 Fluxul de Înregistrare Utilizator</h3>
+
+<ol>
+    <li>Client trimite request POST la /api/auth/register cu datele utilizatorului</li>
+    <li>AuthResource primește requestul și validează datele</li>
+    <li>UserService.registerUser() verifică dacă username/email există deja</li>
+    <li>Parola este hash-uită folosind BCrypt</li>
+    <li>Utilizatorul este inserat în baza de date</li>
+    <li>Răspuns JSON cu datele utilizatorului creat este returnat clientului</li>
+</ol>
+
+<h3>5.2 Fluxul de Creare Rezervare</h3>
+
+<ol>
+    <li>Client trimite request POST la /booking-servlet/api/bookings cu detaliile rezervării</li>
+    <li>BookingResource primește requestul</li>
+    <li>EventService.validateEvent() face request HTTP GET către Event Servlet pentru validarea evenimentului</li>
+    <li>Event Servlet returnează detaliile evenimentului (status, capacitate, preț)</li>
+    <li>BookingResource verifică dacă evenimentul este valid și activ</li>
+    <li>Se creează rezervarea în tabelul bookings</li>
+    <li>Se creează articolele rezervării în tabelul booking_items</li>
+    <li>Se creează înregistrarea de plată în tabelul payments</li>
+    <li>EventService.updateEventCapacity() face request HTTP PATCH către Event Servlet pentru actualizarea capacității</li>
+    <li>Răspuns JSON cu rezervarea creată este returnat clientului</li>
+</ol>
+
+<h3>5.3 Fluxul de Obținere Evenimente</h3>
+
+<ol>
+    <li>Client trimite request GET la /event-servlet/api/events cu parametri opționali (category, status, page, size)</li>
+    <li>EventResource primește requestul</li>
+    <li>EventService.getAllEvents() construiește query SQL dinamic bazat pe parametri</li>
+    <li>Query-ul este executat folosind DatabaseConnection</li>
+    <li>Rezultatele sunt mapate la obiecte Event</li>
+    <li>Lista de evenimente este serializată în JSON și returnată clientului</li>
+</ol>
+
+<h2>6. Exemple de Utilizare</h2>
+
+<h3>6.1 Exemplu: Creare Eveniment</h3>
+
+<p><strong>Request HTTP:</strong></p>
+<div class="code">
+POST /event-servlet/api/events HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+
+{
+  "title": "Concert Rock",
+  "description": "Concert rock cu trupe locale",
+  "eventDate": "2024-12-15T20:00:00",
+  "category": "Music",
+  "maxAttendees": 5000,
+  "basePrice": 75.00,
+  "status": "ACTIVE"
+}
+</div>
+
+<p><strong>Răspuns:</strong></p>
+<div class="code">
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Concert Rock",
+  "description": "Concert rock cu trupe locale",
+  "eventDate": "2024-12-15T20:00:00",
+  "status": "ACTIVE",
+  "maxAttendees": 5000,
+  "basePrice": 75.00,
+  "createdAt": "2024-11-10T10:30:00"
+}
+</div>
+
+<h3>6.2 Exemplu: Creare Rezervare</h3>
+
+<p><strong>Request HTTP:</strong></p>
+<div class="code">
+POST /booking-servlet/api/bookings HTTP/1.1
+Host: localhost:8081
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "eventId": 1,
+  "totalAmount": 150.00,
+  "items": [
+    {
+      "quantity": 2,
+      "unitPrice": 75.00,
+      "totalPrice": 150.00
+    }
+  ],
+  "paymentMethod": "CREDIT_CARD"
+}
+</div>
+
+<p><strong>Răspuns:</strong></p>
+<div class="code">
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "id": 1,
+  "userId": 1,
+  "eventId": 1,
+  "bookingReference": "BK1699608000123ABC",
+  "totalAmount": 150.00,
+  "status": "PENDING",
+  "createdAt": "2024-11-10T11:00:00"
+}
+</div>
+
+<h3>6.3 Exemplu: Comunicare între Servleturi</h3>
+
+<p>Când Booking Servlet trebuie să valideze un eveniment, face următorul request:</p>
+
+<div class="code">
+GET /event-servlet/api/events/1 HTTP/1.1
+Host: tomcat:8080
+</div>
+
+<p>Event Servlet răspunde cu:</p>
+<div class="code">
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Concert Rock",
+  "status": "ACTIVE",
+  "maxAttendees": 5000,
+  "basePrice": 75.00
+}
+</div>
+
+<h2>7. Context de Operare</h2>
+
+<h3>7.1 Cerințe de Sistem</h3>
+
+<ul>
+    <li><strong>Java:</strong> JDK 17 sau superior</li>
+    <li><strong>Maven:</strong> 3.6 sau superior</li>
+    <li><strong>PostgreSQL:</strong> 13 sau superior</li>
+    <li><strong>Node.js:</strong> 18 sau superior (pentru frontend)</li>
+    <li><strong>Docker:</strong> 20.10 sau superior (opțional, pentru deployment)</li>
+</ul>
+
+<h3>7.2 Configurare Baza de Date</h3>
+
+<p>Aplicația necesită o bază de date PostgreSQL configurată cu următoarele:</p>
+<ul>
+    <li>Database: eventticketing</li>
+    <li>User: eventuser</li>
+    <li>Password: eventpass</li>
+    <li>Port: 5432</li>
+</ul>
+
+<p>Schema bazei de date trebuie creată rulând scriptul schema.sql înainte de prima utilizare.</p>
+
+<h3>7.3 Deployment</h3>
+
+<p>Aplicația poate fi rulată în două moduri:</p>
+
+<ol>
+    <li><strong>Docker Compose:</strong> Toate serviciile (PostgreSQL, Tomcat, Jetty) sunt pornite automat</li>
+    <li><strong>Manual:</strong> Fiecare componentă poate fi pornită manual folosind scripturi Maven sau embedded servers</li>
+</ol>
+
+<p>Variabilele de mediu importante:</p>
+<ul>
+    <li>DATABASE_URL: jdbc:postgresql://localhost:5432/eventticketing</li>
+    <li>DATABASE_USER: eventuser</li>
+    <li>DATABASE_PASSWORD: eventpass</li>
+    <li>EVENT_SERVICE_URL: http://tomcat:8080/event-servlet/api/events (pentru Booking Servlet)</li>
+</ul>
+
+<h3>7.4 Porturi Utilizate</h3>
+
+<ul>
+    <li><strong>8080:</strong> Event Servlet (Tomcat)</li>
+    <li><strong>8081:</strong> Booking Servlet (Jetty)</li>
+    <li><strong>5432:</strong> PostgreSQL</li>
+    <li><strong>3001:</strong> Frontend Next.js (development)</li>
+</ul>
+
+<h2>8. Concluzii</h2>
+
+<p>Aplicația implementează cu succes un sistem de management și ticketing pentru evenimente folosind tehnologii Java Enterprise. Arhitectura bazată pe două servleturi separate care comunică prin HTTP oferă flexibilitate și scalabilitate, similar cu o arhitectură de microservicii.</p>
+
+<p>Implementarea folosește best practices pentru securitate (hash-uire parole cu BCrypt), performanță (connection pooling cu HikariCP), și separare de responsabilități (module shared, servleturi separate).</p>
+
+<p>Sistemul este complet funcțional și permite utilizatorilor să vizualizeze evenimente, să se înregistreze, să rezerve bilete și să finalizeze plăți, cu toate datele stocate securizat în baza de date PostgreSQL.</p>
+
+</body>
+</html>
+

@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Redirects pentru API (dacă backend-ul este pe alt domeniu)
+# Netlify va folosi rewrites din next.config.js pentru API calls
+
